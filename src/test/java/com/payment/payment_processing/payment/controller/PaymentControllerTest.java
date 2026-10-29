@@ -18,6 +18,7 @@ import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -115,27 +116,44 @@ class PaymentControllerTest {
 
     @Test
     void getPaymentById_Success() {
-        when(paymentService.getPaymentById(1L)).thenReturn(testResponse);
+        when(authentication.getName()).thenReturn("test@example.com");
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+        when(paymentService.getPaymentById(1L, 1L)).thenReturn(testResponse);
 
-        ResponseEntity<PaymentResponse> response = paymentController.getPaymentById(1L);
+        ResponseEntity<PaymentResponse> response = paymentController.getPaymentById(1L, authentication);
 
         assertNotNull(response);
         assertTrue(response.getStatusCode().is2xxSuccessful());
         assertNotNull(response.getBody());
         assertEquals(1L, response.getBody().getId());
 
-        verify(paymentService).getPaymentById(1L);
+        verify(paymentService).getPaymentById(1L, 1L);
     }
 
     @Test
     void getPaymentById_NotFound_ThrowsException() {
-        when(paymentService.getPaymentById(999L))
+        when(authentication.getName()).thenReturn("test@example.com");
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+        when(paymentService.getPaymentById(999L, 1L))
                 .thenThrow(new RuntimeException("Payment not found"));
 
         assertThrows(RuntimeException.class, () -> {
-            paymentController.getPaymentById(999L);
+            paymentController.getPaymentById(999L, authentication);
         });
 
-        verify(paymentService).getPaymentById(999L);
+        verify(paymentService).getPaymentById(999L, 1L);
+    }
+
+    @Test
+    void getPayments_ReturnsAuthenticatedUsersPayments() {
+        when(authentication.getName()).thenReturn("test@example.com");
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+        when(paymentService.getPaymentsByUser(1L)).thenReturn(List.of(testResponse));
+
+        ResponseEntity<List<PaymentResponse>> response = paymentController.getPayments(authentication);
+
+        assertTrue(response.getStatusCode().is2xxSuccessful());
+        assertEquals(List.of(testResponse), response.getBody());
+        verify(paymentService).getPaymentsByUser(1L);
     }
 }

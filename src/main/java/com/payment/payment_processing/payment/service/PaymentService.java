@@ -12,7 +12,9 @@ import com.payment.payment_processing.payment.kafka.PaymentProducer;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class PaymentService {
@@ -108,6 +110,29 @@ public class PaymentService {
         System.out.println("Payment stored in Redis");
 
         return response;
+    }
+
+    public List<PaymentResponse> getPaymentsByUser(Long userId) {
+        return paymentRepository.findAllByUser_IdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(this::toPaymentResponse)
+                .collect(Collectors.toList());
+    }
+
+    public PaymentResponse getPaymentById(Long paymentId, Long userId) {
+        paymentRepository.findByIdAndUser_Id(paymentId, userId)
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
+        return getPaymentById(paymentId);
+    }
+
+    private PaymentResponse toPaymentResponse(Payment payment) {
+        return new PaymentResponse(
+                payment.getId(),
+                payment.getAmount(),
+                payment.getCurrency(),
+                payment.getStatus(),
+                payment.getCreatedAt()
+        );
     }
 
     public void clearPaymentCache(Long paymentId) {

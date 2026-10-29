@@ -27,6 +27,7 @@ A backend application built with Java and Spring Boot to demonstrate payment cre
 - Payment status tracking: `PENDING`, `PROCESSING`, `SUCCESS`, and `FAILED`
 - Redis caching for payment lookups
 - Cache invalidation when payment status changes
+- React frontend for registration, login, payment creation, and authenticated payment history
 - PostgreSQL persistence and Flyway database migrations
 - Request validation and exception handling
 
@@ -136,7 +137,7 @@ Typical workflow:
 3. Send the JWT as a Bearer token to protected endpoints.
 4. Create a payment with an `Idempotency-Key` header.
 5. Repeat the same request with the same key to test idempotency.
-6. Retrieve the payment and observe Redis caching.
+6. Retrieve payment history or a payment by ID.
 7. Observe Kafka-driven payment status transitions.
 
 Base URL:
@@ -145,7 +146,13 @@ Base URL:
 http://localhost:8080
 ```
 
-The exact endpoint paths, request bodies, and authentication requirements should be taken from the implemented controllers.
+The React frontend is in `frontend/` and can be started with `npm start` from that directory. It uses the authenticated payment API to show the current user's payment history.
+
+Payment endpoints:
+
+- `POST /api/payments` — create a payment (requires an `Idempotency-Key` header)
+- `GET /api/payments` — list the authenticated user's payments
+- `GET /api/payments/{id}` — retrieve one of the authenticated user's payments
 
 ## Running Tests
 
@@ -163,7 +170,7 @@ mvnw.cmd test
 
 ## Project Status
 
-The backend implementation and initial test phase are complete. API documentation, a shareable Postman collection, and full-stack frontend integration are planned as subsequent improvements.
+The backend and React frontend are implemented, including authenticated payment history. Dockerizing the full stack and deployment remain future work.
 
 ## Author
 

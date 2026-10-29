@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/payments")
 public class PaymentController {
@@ -55,10 +57,24 @@ public class PaymentController {
 
     @GetMapping("/{id}")
     public ResponseEntity<PaymentResponse> getPaymentById(
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            Authentication authentication) {
 
-        PaymentResponse response = paymentService.getPaymentById(id);
+        User user = getAuthenticatedUser(authentication);
+        PaymentResponse response = paymentService.getPaymentById(id, user.getId());
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PaymentResponse>> getPayments(
+            Authentication authentication) {
+        User user = getAuthenticatedUser(authentication);
+        return ResponseEntity.ok(paymentService.getPaymentsByUser(user.getId()));
+    }
+
+    private User getAuthenticatedUser(Authentication authentication) {
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

@@ -20,6 +20,7 @@ import org.springframework.data.redis.core.ValueOperations;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -171,6 +172,28 @@ class PaymentServiceTest {
         assertThrows(RuntimeException.class, () -> {
             paymentService.getPaymentById(1L);
         });
+    }
+
+    @Test
+    void getPaymentsByUser_ReturnsPaymentsNewestFirstAsResponses() {
+        when(paymentRepository.findAllByUser_IdOrderByCreatedAtDesc(1L))
+                .thenReturn(List.of(testPayment));
+
+        List<PaymentResponse> result = paymentService.getPaymentsByUser(1L);
+
+        assertEquals(1, result.size());
+        assertEquals(testPayment.getId(), result.get(0).getId());
+        assertEquals(testPayment.getAmount(), result.get(0).getAmount());
+        assertEquals(testPayment.getStatus(), result.get(0).getStatus());
+        verify(paymentRepository).findAllByUser_IdOrderByCreatedAtDesc(1L);
+    }
+
+    @Test
+    void getPaymentByIdForUser_RejectsPaymentOwnedByAnotherUser() {
+        when(paymentRepository.findByIdAndUser_Id(1L, 2L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> paymentService.getPaymentById(1L, 2L));
+        verify(valueOperations, never()).get(anyString());
     }
 
     @Test
