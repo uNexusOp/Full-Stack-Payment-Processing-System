@@ -1,5 +1,6 @@
 package com.payment.payment_processing.user.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import jakarta.persistence.PrePersist;
@@ -20,6 +21,7 @@ public class User {
     private String email;
 
     @Column(nullable = false, length = 255)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Enumerated(EnumType.STRING)

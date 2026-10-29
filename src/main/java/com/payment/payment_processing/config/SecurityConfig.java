@@ -2,6 +2,7 @@ package com.payment.payment_processing.config;
 
 import com.payment.payment_processing.auth.filter.JwtAuthenticationFilter;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -44,9 +45,12 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                HttpMethod.POST,
                                 "/api/users",
                                 "/api/auth/login"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/users/**")
+                        .hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
 
